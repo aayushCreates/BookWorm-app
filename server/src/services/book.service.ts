@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import uploadToCloudinary from "../utils/cloudinary.utils";
 
 const prisma = new PrismaClient();
 
@@ -54,11 +55,14 @@ export default class BookServices {
         });
     }
 
-    static async addBook(data: { title: string, image: string, caption?: string, rating: number, userId: string }) {
+    static async addBook(data: { title: string, caption?: string, rating: number, userId: string, fileData: any }) {
+        const result = await uploadToCloudinary(data.fileData.buffer);
+        const imageUrl = result.secure_url;
+
         return await prisma.book.create({
             data: {
                 title: data.title,
-                image: data.image,
+                image: imageUrl,
                 caption: data.caption,
                 rating: data.rating,
                 userId: data.userId
