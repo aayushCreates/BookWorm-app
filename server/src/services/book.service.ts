@@ -63,7 +63,7 @@ export default class BookServices {
             data: {
                 title: data.title,
                 image: imageUrl,
-                caption: data.caption,
+                caption: data.caption ?? null,
                 rating: data.rating,
                 userId: data.userId
             }
@@ -77,9 +77,14 @@ export default class BookServices {
             throw new Error("Unauthorized or Book not found");
         }
 
+        const updateData: any = { ...data };
+        if (updateData.caption === undefined) {
+            delete updateData.caption;
+        }
+
         return await prisma.book.update({
             where: { id },
-            data
+            data: updateData
         });
     }
 

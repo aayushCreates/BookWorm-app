@@ -42,14 +42,14 @@ export const book = async (req: Request, res: Response) => {
 
 export const addBook = async (req: Request, res: Response) => {
     try {
-        const { title, image, caption, rating } = req.body;
+        const { title, caption, rating } = req.body;
         const fileData = req.file;
         const userId = req.user?.id as string;
 
-        if (!title || !image || !rating || !data) {
+        if (!title || !rating || !fileData) {
             return res.status(400).json({
                 success: false,
-                message: "Title, image and rating are required"
+                message: "Title, rating and book image are required"
             });
         }
 
