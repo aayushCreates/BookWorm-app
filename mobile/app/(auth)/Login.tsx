@@ -1,13 +1,16 @@
-import styles from "@/assets/styles/login.styles";
+import styles from "@/assets/styles/auth.styles";
 import COLORS from "@/constants/colors";
+import { useAuthStore } from "@/store/auth.store";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link } from "expo-router";
-import { useState } from "react";
+import { Link, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -15,34 +18,61 @@ import {
 } from "react-native";
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleLogin = async () => {};
+  const { login, isLoading } = useAuthStore();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    const result = await login(email, password);
+
+    if (result.success) {
+      // Alert.alert("Success", "Logged in successfully!");
+      router.push("/(tabs)");
+    } else {
+      Alert.alert(
+        "Login Failed",
+        result.err || "Check your credentials and try again."
+      );
+    }
+  };
 
   return (
     <KeyboardAvoidingView
-      style={{
-        flex: 1,
-      }}
+      style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
-        {/* PIC */}
-        <View style={styles.topIllustration}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Illustration */}
+        <View style={styles.illustrationContainer}>
           <Image
             source={require("@/assets/images/i.png")}
-            style={styles.illustrationImage}
-            resizeMode="contain"
+            style={styles.illustration}
           />
         </View>
 
-        {/* AUTH-FORM */}
+        {/* Auth Card */}
         <View style={styles.card}>
-          <View style={styles.formContainer}>
-            {/* Email */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.subtitle}>
+              Log in to continue your reading journey
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            {/* Email Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <View style={styles.inputContainer}>
@@ -54,7 +84,7 @@ export default function Login() {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your email"
+                  placeholder="name@example.com"
                   placeholderTextColor={COLORS.placeholderText}
                   value={email}
                   onChangeText={setEmail}
@@ -64,19 +94,19 @@ export default function Login() {
               </View>
             </View>
 
-            {/* Password */}
+            {/* Password Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
-                  name="lock-closed"
+                  name="lock-closed-outline"
                   size={20}
                   color={COLORS.primary}
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   placeholderTextColor={COLORS.placeholderText}
                   value={password}
                   onChangeText={setPassword}
@@ -89,27 +119,28 @@ export default function Login() {
                 >
                   <Ionicons
                     name={!showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
+                    size={22}
                     color={COLORS.primary}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Login BUTTON */}
+            {/* Login Button */}
             <TouchableOpacity
               style={styles.button}
               onPress={handleLogin}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
                 <Text style={styles.buttonText}>Login</Text>
               )}
             </TouchableOpacity>
 
-            {/* FOOTER */}
+            {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account?</Text>
               <Link href="/(auth)/signup" asChild>
@@ -120,7 +151,7 @@ export default function Login() {
             </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

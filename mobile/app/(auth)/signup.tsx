@@ -1,12 +1,16 @@
-import styles from "@/assets/styles/login.styles";
+import styles from "@/assets/styles/auth.styles";
 import COLORS from "@/constants/colors";
+import { useAuthStore } from "@/store/auth.store";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link } from "expo-router";
-import { useState } from "react";
+import { Link, useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -14,30 +18,53 @@ import {
 } from "react-native";
 
 export default function Signup() {
+  const router = useRouter();
   const [username, setUserName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSignup = async () => {};
+  const { isLoading, register } = useAuthStore();
+
+  const handleSignup = async () => {
+    const result = await register(username, email, password);
+
+    if (!result.success) {
+      Alert.alert("Error", result.err);
+    }
+
+    router.push("/(tabs)");
+  };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Illustration */}
+        <View style={styles.illustrationContainer}>
+          <Image
+            source={require("@/assets/images/i.png")}
+            style={styles.illustration}
+          />
+        </View>
+
+        {/* Auth Card */}
         <View style={styles.card}>
-          {/* HEADER */}
           <View style={styles.header}>
-            <Text style={styles.title}>BookWorm🧾</Text>
-            <Text style={styles.subtitle}>Share your favorite reads</Text>
+            <Text style={styles.title}>Join BookWorm</Text>
+            <Text style={styles.subtitle}>
+              Create an account to start sharing your favorite reads
+            </Text>
           </View>
 
-          {/* INPUT-FORM */}
-          <View>
-            {/* USER-NAME INPUT */}
+          <View style={styles.form}>
+            {/* Username Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Username</Text>
               <View style={styles.inputContainer}>
@@ -49,7 +76,7 @@ export default function Signup() {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your name"
+                  placeholder="johndoe"
                   placeholderTextColor={COLORS.placeholderText}
                   value={username}
                   onChangeText={setUserName}
@@ -58,7 +85,7 @@ export default function Signup() {
               </View>
             </View>
 
-            {/* EMAIL INPUT */}
+            {/* Email Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <View style={styles.inputContainer}>
@@ -70,16 +97,17 @@ export default function Signup() {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your email address"
+                  placeholder="name@example.com"
                   placeholderTextColor={COLORS.placeholderText}
                   value={email}
                   onChangeText={setEmail}
+                  keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
             </View>
 
-            {/* Password INPUT */}
+            {/* Password Field */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
@@ -91,44 +119,44 @@ export default function Signup() {
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter password"
+                  placeholder="••••••••"
                   placeholderTextColor={COLORS.placeholderText}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
-
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeIcon}
                 >
                   <Ionicons
                     name={!showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={20}
+                    size={22}
                     color={COLORS.primary}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Sign up BUTTON */}
+            {/* Signup Button */}
             <TouchableOpacity
               style={styles.button}
               onPress={handleSignup}
               disabled={isLoading}
+              activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.white} />
               ) : (
-                <Text style={styles.buttonText}>Sign up</Text>
+                <Text style={styles.buttonText}>Sign Up</Text>
               )}
             </TouchableOpacity>
 
-            {/* FOOTER */}
+            {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Already have an account?</Text>
-              <Link href="/(auth)" asChild>
+              <Link href="/(auth)/Login" asChild>
                 <TouchableOpacity>
                   <Text style={styles.link}>Login</Text>
                 </TouchableOpacity>
@@ -136,7 +164,7 @@ export default function Signup() {
             </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
