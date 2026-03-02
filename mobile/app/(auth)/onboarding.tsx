@@ -3,11 +3,11 @@ import { Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "@/assets/styles/onboarding.styles";
 
-export default function Index() {
+export default function Onboarding() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push("/(auth)/Login");
+    router.push("/(auth)/login");
   };
 
   return (

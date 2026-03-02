@@ -1,5 +1,5 @@
-import React from "react";
 import { Stack } from "expo-router";
+import React from "react";
 
 const AuthLayout = () => {
   return (
@@ -8,7 +8,8 @@ const AuthLayout = () => {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Login" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
     </Stack>
   );
