@@ -3,8 +3,10 @@ import COLORS from "@/constants/colors";
 import { useAuthStore } from "@/store/auth.store";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import axios from "axios";
+import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   Text,
@@ -20,24 +22,47 @@ const AddBook = () => {
   const [caption, setCaption] = useState("");
   const { token } = useAuthStore();
 
-  const handlePostBook = async ()=> {
-    try {
-      const { data } = await axios.post("http://10.0.2.2:5050", {
-        title: title,
-        rating: rating,
-        image: image,
-        caption: caption
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-
-    }catch(err) {
-
+  const handleUploadImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission required', 'Permission to access the media library is required.');
+      return;
     }
-  }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const handlePostBook = async () => {
+    try {
+      console.log("title", title);
+      console.log("rating", rating);
+      console.log("image", image);
+      console.log("caption", caption);
+      const { data } = await axios.post(
+        "http://10.0.2.2:5050/api/v1/book",
+        {
+          title: title,
+          rating: rating,
+          image: image,
+          caption: caption,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
 
   const renderStars = () => {
     return (
@@ -101,7 +126,7 @@ const AddBook = () => {
           {/* Book IMG */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Book Image</Text>
-            <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7} onPress={handleUploadImage}>
               {image ? (
                 <Image source={{ uri: image }} style={styles.previewImage} />
               ) : (
