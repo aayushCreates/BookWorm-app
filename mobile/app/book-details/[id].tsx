@@ -1,9 +1,13 @@
 import styles from "@/assets/styles/bookDetails.styles";
 import COLORS from "@/constants/colors";
+import { useAuthStore } from "@/store/auth.store";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -14,89 +18,75 @@ import {
   View,
 } from "react-native";
 
-const DUMMY_POSTS = [
-  {
-    id: "1",
-    user: {
-      id: "u1",
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/150?u=john",
-    },
-    book: {
-      title: "The Hunger Games",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1586722975i/2767052.jpg",
-      rating: 4,
-      review:
-        "A dystopian tale of survival, rebellion, and sacrifice. Follow Katniss Everdeen as she navigates the deadly Hunger Games, a televised competition where teenagers from Panem's districts must fight to the death. A gripping story of courage and defiance against an oppressive regime.",
-      date: "March 9, 2025",
-      category: "Dystopian",
-    },
-  },
-  {
-    id: "2",
-    user: {
-      id: "u2",
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/150?u=jane",
-    },
-    book: {
-      title: "The Great Gatsby",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1490528560i/4671.jpg",
-      rating: 5,
-      review:
-        "A classic story of wealth, love, and the American dream in the 1920s. Jay Gatsby's mysterious past and his obsession with Daisy Buchanan unfold in the opulent world of Long Island's elite. F. Scott Fitzgerald's masterpiece explore the tragic illusions of success and the pursuit of lost time.",
-      date: "March 9, 2025",
-      category: "Classic",
-    },
-  },
-  {
-    id: "3",
-    user: {
-      id: "u3",
-      name: "Alex Smith",
-      avatar: "https://i.pravatar.cc/150?u=alex",
-    },
-    book: {
-      title: "Sapiens",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1595703765i/23692271.jpg",
-      rating: 5,
-      review:
-        "A thought-provoking exploration of human history and our species' evolution. Yuval Noah Harari takes us on a journey from the emergence of Homo sapiens in Africa to the scientific and technological revolutions of the present day. Discover how myths, money, and empires shaped our world.",
-      date: "March 9, 2025",
-      category: "History",
-    },
-  },
-];
+interface Comment {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
 
-const DUMMY_COMMENTS = [
-  {
-    id: "c1",
-    user: "Sarah Wilson",
-    avatar: "https://i.pravatar.cc/150?u=sarah",
-    rating: 5,
-    text: "Absolutely loved this book! The characters are so well-developed and the plot kept me on the edge of my seat.",
-    date: "2 days ago",
-  },
-  {
-    id: "c2",
-    user: "Michael Brown",
-    avatar: "https://i.pravatar.cc/150?u=mike",
-    rating: 4,
-    text: "Great read, although the middle part was a bit slow. Highly recommended nonetheless.",
-    date: "5 days ago",
-  },
-];
+interface BookDetail {
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  book: {
+    title: string;
+    image: string;
+    rating: number;
+    review: string;
+    category: string;
+    author?: string;
+  };
+  comments: Comment[];
+  createdAt: string;
+}
 
 const Details = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
+  const { token } = useAuthStore();
+  const [bookDetail, setBookDetail] = useState<BookDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const bookPost = DUMMY_POSTS.find((p) => p.id === id) || DUMMY_POSTS[0];
+  const getBookDetail = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(
+        `http://10.0.2.2:5050/api/v1/book/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!data.success) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setBookDetail(data.data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      getBookDetail();
+    }
+  }, [id]);
 
   const renderStars = (rating: number, size: number = 18) => {
     return (
@@ -114,6 +104,46 @@ const Details = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (!bookDetail) {
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: COLORS.textSecondary }}>Book not found</Text>
+        <TouchableOpacity 
+          style={{ marginTop: 20, backgroundColor: COLORS.primary, padding: 12, borderRadius: 10 }}
+          onPress={() => router.back()}
+        >
+          <Text style={{ color: COLORS.white, fontWeight: '700' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const formattedDate = new Date(bookDetail.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -125,7 +155,7 @@ const Details = () => {
       {/* Immersive Image Header */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: bookPost.book.image }}
+          source={{ uri: bookDetail.book.image }}
           style={styles.bookImage}
           resizeMode="cover"
         />
@@ -143,13 +173,13 @@ const Details = () => {
       >
         <View style={styles.headerInfo}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{bookPost.book.category}</Text>
+            <Text style={styles.categoryText}>{bookDetail.book.category}</Text>
           </View>
-          <Text style={styles.title}>{bookPost.book.title}</Text>
+          <Text style={styles.title}>{bookDetail.book.title}</Text>
           <View style={styles.ratingRow}>
-            {renderStars(bookPost.book.rating)}
+            {renderStars(bookDetail.book.rating)}
             <Text style={styles.ratingText}>
-              {bookPost.book.rating.toFixed(1)} Rating
+              {bookDetail.book.rating.toFixed(1)} Rating
             </Text>
           </View>
           <View style={styles.dateContainer}>
@@ -158,7 +188,7 @@ const Details = () => {
               size={14}
               color={COLORS.textSecondary}
             />
-            <Text style={styles.dateText}>Posted on {bookPost.book.date}</Text>
+            <Text style={styles.dateText}>Posted on {formattedDate}</Text>
           </View>
         </View>
 
@@ -170,16 +200,16 @@ const Details = () => {
           <Pressable 
             onPress={() => router.push({
               pathname: '/profile/[id]',
-              params: { id: bookPost.user.id }
+              params: { id: bookDetail.user._id }
             })}
           >
             <View style={styles.userInfo}>
               <Image
-                source={{ uri: bookPost.user.avatar }}
+                source={{ uri: bookDetail.user.avatar || `https://ui-avatars.com/api/?name=${bookDetail.user.name}&background=random` }}
                 style={styles.userAvatar}
               />
               <View>
-                <Text style={styles.userName}>{bookPost.user.name}</Text>
+                <Text style={styles.userName}>{bookDetail.user.name}</Text>
                 <Text style={styles.userRole}>Avid Reader</Text>
               </View>
               <TouchableOpacity
@@ -206,14 +236,14 @@ const Details = () => {
         {/* Review Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Review & Thoughts</Text>
-          <Text style={styles.reviewText}>{bookPost.book.review}</Text>
+          <Text style={styles.reviewText}>{bookDetail.book.review}</Text>
         </View>
 
         <View style={styles.divider} />
 
         {/* Community Ratings & Comments Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Community Reviews</Text>
+          <Text style={styles.sectionTitle}>Community Reviews ({bookDetail.comments?.length || 0})</Text>
 
           {/* Add Comment Input */}
           <View style={styles.addCommentContainer}>
@@ -231,22 +261,28 @@ const Details = () => {
           </View>
 
           <View style={{ marginTop: 24 }}>
-            {DUMMY_COMMENTS.map((comment) => (
-              <View key={comment.id} style={styles.commentItem}>
-                <Image
-                  source={{ uri: comment.avatar }}
-                  style={styles.commentAvatar}
-                />
-                <View style={styles.commentContent}>
-                  <View style={styles.commentUserRow}>
-                    <Text style={styles.commentUserName}>{comment.user}</Text>
-                    <Text style={styles.commentDate}>{comment.date}</Text>
+            {bookDetail.comments && bookDetail.comments.length > 0 ? (
+              bookDetail.comments.map((comment) => (
+                <View key={comment._id} style={styles.commentItem}>
+                  <Image
+                    source={{ uri: comment.user.avatar || `https://ui-avatars.com/api/?name=${comment.user.name}&background=random` }}
+                    style={styles.commentAvatar}
+                  />
+                  <View style={styles.commentContent}>
+                    <View style={styles.commentUserRow}>
+                      <Text style={styles.commentUserName}>{comment.user.name}</Text>
+                      <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
+                    </View>
+                    {renderStars(comment.rating, 14)}
+                    <Text style={styles.commentText}>{comment.comment}</Text>
                   </View>
-                  {renderStars(comment.rating, 14)}
-                  <Text style={styles.commentText}>{comment.text}</Text>
                 </View>
+              ))
+            ) : (
+              <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                <Text style={{ color: COLORS.textSecondary, fontStyle: 'italic' }}>No reviews yet. Be the first to share your thoughts!</Text>
               </View>
-            ))}
+            )}
           </View>
         </View>
 
