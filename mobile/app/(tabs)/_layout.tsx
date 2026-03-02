@@ -1,7 +1,7 @@
-import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import COLORS from "../../constants/colors";
+import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import COLORS from "../../constants/colors";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -41,6 +41,15 @@ export default function TabLayout() {
           title: "Add Book",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="saved-books"
+        options={{
+          title: "Saved Books",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bookmark-outline" size={size} color={color} />
           ),
         }}
       />
