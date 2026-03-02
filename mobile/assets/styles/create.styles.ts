@@ -52,6 +52,21 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontWeight: "700",
   },
+  ratingHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  ratingValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: COLORS.primary,
+    backgroundColor: COLORS.primary + "15",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",

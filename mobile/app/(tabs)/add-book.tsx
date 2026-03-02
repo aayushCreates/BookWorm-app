@@ -64,6 +64,17 @@ const AddBook = () => {
     }
   };
 
+  const getRatingText = () => {
+    switch (rating) {
+      case 1: return "Terrible";
+      case 2: return "Poor";
+      case 3: return "Average";
+      case 4: return "Good";
+      case 5: return "Excellent";
+      default: return "Select Rating";
+    }
+  };
+
   const renderStars = () => {
     return (
       <View style={styles.ratingContainer}>
@@ -119,7 +130,14 @@ const AddBook = () => {
 
           {/* Rating */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Your Rating</Text>
+            <View style={styles.ratingHeader}>
+              <Text style={styles.label}>Your Rating</Text>
+              {rating > 0 && (
+                <Text style={styles.ratingValue}>
+                  {rating}/5 - {getRatingText()}
+                </Text>
+              )}
+            </View>
             {renderStars()}
           </View>
 

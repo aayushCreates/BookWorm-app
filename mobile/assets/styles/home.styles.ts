@@ -56,6 +56,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textDark,
   },
+  filterButton: {
+    padding: 10,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginLeft: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  categoriesContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  categoryBadge: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    marginRight: 10,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  categoryBadgeActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textSecondary,
+  },
+  categoryTextActive: {
+    color: COLORS.white,
+  },
   listContainer: {
     padding: 16,
     paddingBottom: 80, 

@@ -1,0 +1,255 @@
+import { StyleSheet, Dimensions } from "react-native";
+import COLORS from "@/constants/colors";
+
+const { width } = Dimensions.get("window");
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  imageContainer: {
+    width: width,
+    height: 450,
+    position: "relative",
+  },
+  bookImage: {
+    width: "100%",
+    height: "100%",
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  contentScroll: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    marginTop: -40,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    paddingTop: 30,
+  },
+  headerInfo: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  categoryBadge: {
+    backgroundColor: COLORS.primary + "15",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+  categoryText: {
+    color: COLORS.primary,
+    fontWeight: "800",
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+    lineHeight: 38,
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  ratingStars: {
+    flexDirection: "row",
+    marginRight: 10,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: "700",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginHorizontal: 24,
+    opacity: 0.5,
+    marginVertical: 20,
+  },
+  section: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
+    marginBottom: 12,
+  },
+  reviewText: {
+    fontSize: 16,
+    color: COLORS.textDark,
+    lineHeight: 26,
+    fontWeight: "500",
+    opacity: 0.8,
+  },
+  commentItem: {
+    flexDirection: "row",
+    marginBottom: 20,
+    backgroundColor: COLORS.background + "40", // Very light primary background
+    padding: 12,
+    borderRadius: 15,
+  },
+  commentAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentUserRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  commentUserName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+  },
+  commentDate: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+  commentText: {
+    fontSize: 14,
+    color: COLORS.textDark,
+    lineHeight: 20,
+    opacity: 0.9,
+    marginBottom: 6,
+  },
+  addCommentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.inputBackground,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  commentInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 14,
+    color: COLORS.textDark,
+  },
+  sendButton: {
+    marginLeft: 10,
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+    padding: 16,
+    borderRadius: 20,
+  },
+  userAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: COLORS.textPrimary,
+  },
+  userRole: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+  followButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginLeft: "auto",
+  },
+  followingButton: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  followButtonText: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  followingButtonText: {
+    color: COLORS.primary,
+  },
+  footer: {
+    flexDirection: "row",
+    padding: 24,
+    paddingBottom: 40,
+    gap: 15,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+    height: 60,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  actionButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  secondaryButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: COLORS.white,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  dateText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+});
+
+export default styles;
