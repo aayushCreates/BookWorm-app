@@ -44,7 +44,7 @@ export const addBook = async (req: Request, res: Response) => {
     try {
         const { title, caption, rating } = req.body;
         const fileData = req.file;
-        const userId = req.user?.id as string;
+        const userId = req.user?._id;
 
         if (!title || !rating || !fileData) {
             return res.status(400).json({
@@ -78,7 +78,7 @@ export const updateBookDetails = async (req: Request, res: Response) => {
         const { id } = req.params as {
             id: string
         };
-        const userId = req.user?.id as string;
+        const userId = req.user?._id;
         const data = req.body;
 
         const updatedBook = await BookServices.editBookDetails(id, userId, data);
@@ -101,7 +101,7 @@ export const removeBook = async (req: Request, res: Response) => {
         const { id } = req.params as {
             id: string
         };
-        const userId = req.user?.id as string;
+        const userId = req.user?._id;
 
         await BookServices.deleteBook(id, userId);
 

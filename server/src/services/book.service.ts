@@ -1,102 +1,62 @@
-import { PrismaClient } from "@prisma/client";
+import Book from "../models/book.model";
 import uploadToCloudinary from "../utils/cloudinary.utils";
 
-const prisma = new PrismaClient();
-
 export default class BookServices {
-    static async getAllBook() {
-        return await prisma.book.findMany({
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        avatar: true
-                    }
-                },
-                _count: {
-                    select: {
-                        likedBy: true,
-                        comments: true
-                    }
-                }
-            }
-        });
+  static async getAllBook() {
+    return await Book.find().populate("userId", "id name avatar").exec();
+  }
+
+  static async getBook(id: string) {
+    return await Book.findById(id)
+      .populate("userId", "id name avatar")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "id name avatar",
+        },
+      })
+      .exec();
+  }
+
+  static async addBook(data: {
+    title: string;
+    caption?: string;
+    rating: number;
+    userId: any;
+    fileData: any;
+  }) {
+    const result = await uploadToCloudinary(data.fileData.buffer);
+    const imageUrl = result.secure_url;
+
+    return await Book.create({
+      title: data.title as string,
+      image: imageUrl as string,
+      caption: data.caption as string,
+      rating: data.rating,
+      userId: data.userId,
+    });
+  }
+
+  static async editBookDetails(
+    id: string,
+    userId: any,
+    data: { title?: string; image?: string; caption?: string; rating?: number }
+  ) {
+    const book = await Book.findById(id);
+    if (!book || book.userId.toString() !== userId) {
+      throw new Error("Unauthorized or Book not found");
     }
 
-    static async getBook(id: string) {
-        return await prisma.book.findUnique({
-            where: { id },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        avatar: true
-                    }
-                },
-                comments: {
-                    include: {
-                        user: {
-                            select: {
-                                id: true,
-                                name: true,
-                                avatar: true
-                            }
-                        }
-                    }
-                },
-                _count: {
-                    select: {
-                        likedBy: true
-                    }
-                }
-            }
-        });
+    return await Book.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  static async deleteBook(id: string, userId: string) {
+    const book = await Book.findById(id);
+    if (!book || book.userId.toString() !== userId) {
+      throw new Error("Unauthorized or Book not found");
     }
 
-    static async addBook(data: { title: string, caption?: string, rating: number, userId: string, fileData: any }) {
-        const result = await uploadToCloudinary(data.fileData.buffer);
-        const imageUrl = result.secure_url;
-
-        return await prisma.book.create({
-            data: {
-                title: data.title,
-                image: imageUrl,
-                caption: data.caption ?? null,
-                rating: data.rating,
-                userId: data.userId
-            }
-        });
-    }
-
-    static async editBookDetails(id: string, userId: string, data: { title?: string, image?: string, caption?: string, rating?: number }) {
-        // Check if the book belongs to the user
-        const book = await prisma.book.findUnique({ where: { id } });
-        if (!book || book.userId !== userId) {
-            throw new Error("Unauthorized or Book not found");
-        }
-
-        const updateData: any = { ...data };
-        if (updateData.caption === undefined) {
-            delete updateData.caption;
-        }
-
-        return await prisma.book.update({
-            where: { id },
-            data: updateData
-        });
-    }
-
-    static async deleteBook(id: string, userId: string) {
-        // Check if the book belongs to the user
-        const book = await prisma.book.findUnique({ where: { id } });
-        if (!book || book.userId !== userId) {
-            throw new Error("Unauthorized or Book not found");
-        }
-
-        return await prisma.book.delete({
-            where: { id }
-        });
-    }
+    return await Book.findByIdAndDelete(id);
+  }
 }
