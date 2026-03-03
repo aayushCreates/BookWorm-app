@@ -1,7 +1,5 @@
 import { getJWT, getPasswordHash, validatePassword } from "../utils/auth.utils";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import User from "../models/user.model";
 
 export default class AuthServices {
   static async registerService(
@@ -9,9 +7,7 @@ export default class AuthServices {
     email: string,
     password: string
   ) {
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       throw new Error("User already exists");
@@ -19,46 +15,51 @@ export default class AuthServices {
 
     const hashedPassword = await getPasswordHash(password);
 
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword as string,
-      },
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword as string,
     });
 
-    const token = await getJWT(newUser.id as string, newUser.email);
+    const token = await getJWT((newUser._id).toString(), newUser.email);
 
     return {
-      user: newUser,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        avatar: newUser.avatar,
+      },
       token,
     };
   }
 
-  static async loginService(email: string,
-    password: string) {
-        const user = await prisma.user.findUnique({
-            where: { email },
-          });
-        
-          if (!user) {
-            throw new Error("Invalid credentials");
-          }
-        
-          const isValidPassword = await validatePassword(
-            password,
-            user.password
-          );
-        
-          if (!isValidPassword) {
-            throw new Error("Invalid credentials");
-          }
-        
-          const token = await getJWT(user.id as string, user.email);
-        
-          return {
-            user,
-            token,
-          };
+  static async loginService(email: string, password: string) {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    const isValidPassword = await validatePassword(
+      password,
+      user.password
+    );
+
+    if (!isValidPassword) {
+      throw new Error("Invalid credentials");
+    }
+
+    const token = await getJWT((user._id).toString(), user.email);
+
+    return {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+      },
+      token,
+    };
   }
 }

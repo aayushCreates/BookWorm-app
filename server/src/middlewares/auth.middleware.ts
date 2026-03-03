@@ -1,12 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { validateToken } from "../utils/auth.utils";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import User from "../models/user.model";
 
 export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // const token = req.cookies.token;
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(" ")[1];
     if (!token) {
@@ -24,9 +21,7 @@ export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunc
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: validToken.email },
-    });
+    const user = await User.findOne({ email: validToken.email });
 
     if (!user) {
       return res.status(401).json({
