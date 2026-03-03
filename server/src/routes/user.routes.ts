@@ -5,7 +5,7 @@ import { followUser, unfollowUser, userProfile } from "../controllers/user.contr
 const userRouter = Router();
 
 userRouter.get('/:id', isUserLoggedIn, userProfile);
-userRouter.post('/:id/follow', isUserLoggedIn, followUser);
-userRouter.post('/:id/unfollow', isUserLoggedIn, unfollowUser);
+userRouter.post('/follow/:id', isUserLoggedIn, followUser);
+userRouter.post('/unfollow/:id', isUserLoggedIn, unfollowUser);
 
 export default userRouter;

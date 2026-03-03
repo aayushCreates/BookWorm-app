@@ -40,7 +40,7 @@ const PublicProfile = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [userDetail, setUserDetail] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +61,10 @@ const PublicProfile = () => {
       }
 
       setUserDetail(data.data);
+
+      if (user && data.data.followers.includes(user._id)) {
+        setIsFollowing(true);
+      }
     } catch (err: any) {
       Alert.alert("Error", err.message);
     } finally {
@@ -71,6 +75,50 @@ const PublicProfile = () => {
   useEffect(() => {
     getUserDetails();
   }, [id]);
+
+  const handleFollowAction = async () => {
+    try {
+      const { data } = isFollowing
+        ? await axios.post(
+            `http://10.0.2.2:5050/api/v1/user/unfollow/${id}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+        : await axios.post(
+            `http://10.0.2.2:5050/api/v1/user/follow/${id}`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+      if (!data.success) {
+        throw new Error(data.message || "Action failed");
+      }
+
+      setIsFollowing(!isFollowing);
+
+      // Update local follower count
+      if (userDetail) {
+        const updatedFollowers = isFollowing
+          ? [...userDetail.followers, user?._id || ""]
+          : userDetail.followers.filter((fid) => fid !== user?._id);
+
+        setUserDetail({
+          ...userDetail,
+          followers: updatedFollowers as string[],
+        });
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err.response?.data?.message || err.message);
+    }
+  };
 
   const booksCount = userDetail?.postedBooks?.length || 0;
   const followersCount = userDetail?.followers?.length || 0;
@@ -188,27 +236,29 @@ const PublicProfile = () => {
                 Joined {formatJoinedDate(userDetail.createdAt)}
               </Text>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.editProfileButton,
-                {
-                  backgroundColor: isFollowing ? COLORS.white : COLORS.primary,
-                  borderWidth: 1,
-                  borderColor: COLORS.primary,
-                },
-              ]}
-              onPress={() => setIsFollowing(!isFollowing)}
-              activeOpacity={0.7}
-            >
-              <Text
+            {user && user._id !== id && (
+              <TouchableOpacity
                 style={[
-                  styles.editProfileButtonText,
-                  { color: isFollowing ? COLORS.primary : COLORS.white },
+                  styles.editProfileButton,
+                  {
+                    backgroundColor: isFollowing ? COLORS.white : COLORS.primary,
+                    borderWidth: 1,
+                    borderColor: COLORS.primary,
+                  },
                 ]}
+                onPress={handleFollowAction}
+                activeOpacity={0.7}
               >
-                {isFollowing ? "Following" : "Follow"}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.editProfileButtonText,
+                    { color: isFollowing ? COLORS.primary : COLORS.white },
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
