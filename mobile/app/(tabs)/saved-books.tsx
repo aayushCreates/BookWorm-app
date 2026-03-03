@@ -1,99 +1,84 @@
+import styles from "@/assets/styles/savedBooks.styles";
+import SafeScreen from "@/components/SafeScreen";
+import COLORS from "@/constants/colors";
+import { useAuthStore } from "@/store/auth.store";
+import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Alert,
-  TextInput,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import SafeScreen from "@/components/SafeScreen";
-import COLORS from "@/constants/colors";
-import styles from "@/assets/styles/savedBooks.styles";
-import axios from "axios";
-import { useAuthStore } from "@/store/auth.store";
 
-const SAVED_BOOKS_DUMMY = [
-  {
-    id: "1",
-    title: "The Hunger Games",
-    author: "Suzanne Collins",
-    image:
-      "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1586722975i/2767052.jpg",
-    rating: 4.8,
-    category: "Dystopian",
-  },
-  {
-    id: "2",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    image:
-      "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1490528560i/4671.jpg",
-    rating: 4.5,
-    category: "Classic",
-  },
-  {
-    id: "3",
-    title: "Sapiens",
-    author: "Yuval Noah Harari",
-    image:
-      "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1595703765i/23692271.jpg",
-    rating: 4.9,
-    category: "History",
-  },
-];
+interface SavedBook {
+  _id: string;
+  title: string;
+  image: string;
+  auther?: string;
+  caption: string;
+  rating: number;
+  category?: string;
+}
 
 const SavedBooks = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [savedBooks, setSavedBooks] = useState(SAVED_BOOKS_DUMMY);
+  const [savedBooks, setSavedBooks] = useState<SavedBook[]>([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuthStore();
 
   const filteredBooks = savedBooks.filter((book) =>
     book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchQuery.toLowerCase())
+    (book.auther && book.auther.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const getSavedBooks = async ()=> {
+  const getSavedBooks = async () => {
     try {
-        const { data } = await axios.get(`http://10.0.2.2:5050/api/v1/books/saved`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-    
-          if(!data.success) {
-            throw new Error(data.message || "Something went wrong");
-          }
-    
-          setSavedBooks(data.data);
-    }catch(err: any) {
-        Alert.alert("Error", err.message);
+      setLoading(true);
+      const { data } = await axios.get(`http://10.0.2.2:5050/api/v1/books/saved`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!data.success) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setSavedBooks(data.data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
-  const handleRemoveSavedBook = async (bookId: string)=> {
+  const handleRemoveSavedBook = async (bookId: string) => {
     try {
-        const { data } = await axios.delete(`http://10.0.2.2:5050/api/v1/books/saved/${bookId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-    
-          if(!data.success) {
-            throw new Error(data.message || "Something went wrong");
-          }
-    
-        setSavedBooks((prev) => prev.filter((book) => book.id !== bookId));
-    }catch(err: any) {
-        Alert.alert("Error", err.message);
+      const { data } = await axios.delete(`http://10.0.2.2:5050/api/v1/books/save/${bookId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!data.success) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setSavedBooks((prev) => prev.filter((book) => book._id !== bookId));
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
     }
   }
 
-  useEffect(()=> {
+  useEffect(() => {
     getSavedBooks();
   }, []);
 
@@ -134,14 +119,14 @@ const SavedBooks = () => {
     );
   };
 
-  const renderItem = ({ item }: { item: typeof SAVED_BOOKS_DUMMY[0] }) => (
+  const renderItem = ({ item }: { item: SavedBook }) => (
     <TouchableOpacity
       style={styles.bookItem}
       activeOpacity={0.8}
       onPress={() =>
         router.push({
           pathname: "/book-details/[id]",
-          params: { id: item.id },
+          params: { id: item._id },
         })
       }
     >
@@ -152,18 +137,18 @@ const SavedBooks = () => {
             {item.title}
           </Text>
           <Text style={styles.bookAuthor} numberOfLines={1}>
-            by {item.author}
+            by {item.auther || "Unknown Author"}
           </Text>
           {renderStars(item.rating)}
         </View>
         
         <View style={styles.bottomRow}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.category}</Text>
+            <Text style={styles.categoryText}>{item.category || "General"}</Text>
           </View>
           <TouchableOpacity
             style={styles.removeButton}
-            onPress={() => handleRemove(item.id, item.title)}
+            onPress={() => handleRemove(item._id, item.title)}
             activeOpacity={0.6}
           >
             <Ionicons name="trash" size={18} color="#ff4444" />
@@ -172,6 +157,16 @@ const SavedBooks = () => {
       </View>
     </TouchableOpacity>
   );
+
+  if (loading && savedBooks.length === 0) {
+    return (
+      <SafeScreen>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </SafeScreen>
+    );
+  }
 
   return (
     <SafeScreen>
@@ -214,7 +209,7 @@ const SavedBooks = () => {
         <FlatList
           data={filteredBooks}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={() => (
