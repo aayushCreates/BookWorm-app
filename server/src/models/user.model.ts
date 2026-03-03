@@ -24,6 +24,12 @@ const userSchema: Schema = new Schema(
       type: String,
       default: "",
     },
+    postedBooks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Book",
+      },
+    ],
     followers: [
       {
         type: Schema.Types.ObjectId,
