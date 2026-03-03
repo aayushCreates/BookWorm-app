@@ -21,10 +21,10 @@ export const isUserLoggedIn = async (req: Request, res: Response, next: NextFunc
       });
     }
 
-    const user = await User.findOne({ email: validToken.email });
+    const user = await User.findById(validToken.id);
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         success: false,
         message: "User not found",
       });

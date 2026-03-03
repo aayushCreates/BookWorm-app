@@ -22,8 +22,6 @@ export class UserServices {
             throw new Error("User not found");
         }
 
-        console.log("my profile: ", user);
-
         return user;
     }
 
@@ -32,7 +30,7 @@ export class UserServices {
         if (!user) {
             throw new Error("User not found");
         }
-
+        
         if (data.name) user.name = data.name;
         if (data.email) {
             const existingUser = await User.findOne({ email: data.email });

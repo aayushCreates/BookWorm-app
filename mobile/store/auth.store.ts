@@ -78,6 +78,11 @@ export const useAuthStore = create((set, get) => ({
     set({ user: null, token: null });
   },
 
+  updateUser: async (userData: any) => {
+    set({ user: userData });
+    await AsyncStorage.setItem("user", JSON.stringify(userData));
+  },
+
   checkAuth: async () => {
     try {
       const token = await AsyncStorage.getItem("token");

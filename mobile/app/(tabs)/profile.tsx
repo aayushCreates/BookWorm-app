@@ -40,7 +40,7 @@ interface MyProfile {
 }
 
 const Profile = () => {
-  const { logout, token } = useAuthStore();
+  const { logout, token, updateUser } = useAuthStore();
   const router = useRouter();
 
   const [profile, setProfile] = useState<MyProfile | null>(null);
@@ -53,16 +53,11 @@ const Profile = () => {
   const getProfile = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(
-        `http://10.0.2.2:5050/api/v1/user/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("my info profile: ", data);
+      const { data } = await axios.get("http://10.0.2.2:5050/api/v1/user/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!data.success) {
         throw new Error(data.message || "Something went wrong");
@@ -80,7 +75,7 @@ const Profile = () => {
   };
 
   useEffect(() => {
-      getProfile();
+    getProfile();
   }, []);
 
   const handleLogout = async () => {
@@ -129,10 +124,10 @@ const Profile = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveUpdatedProfile = async () => {
     try {
       const { data } = await axios.patch(
-        "http://10.0.2.2:5050/api/v1/user/update-profile",
+        "http://10.0.2.2:5050/api/v1/user/me",
         {
           avatar: editedImage,
           email: editedEmail,
@@ -146,10 +141,18 @@ const Profile = () => {
       );
 
       if (data.success) {
-        getProfile();
+        setProfile(data.data);
+        await updateUser(data.data);
+
+        setEditedName(data.data.name);
+        setEditedEmail(data.data.email);
+        setEditedImage(data.data.avatar);
         setIsEditModalVisible(false);
       }
     } catch (err: any) {
+      setEditedName(profile?.name as string);
+      setEditedEmail(profile?.email as string);
+      setEditedImage(profile?.avatar as string);
       Alert.alert("Error", err.response?.data?.message || err.message);
     }
   };
@@ -181,7 +184,12 @@ const Profile = () => {
 
   if (loading && !profile) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -200,8 +208,8 @@ const Profile = () => {
             source={{ uri: editedImage || "https://i.pravatar.cc/150?u=john" }}
             style={styles.profileImage}
           />
-          <TouchableOpacity 
-            style={styles.editBadge} 
+          <TouchableOpacity
+            style={styles.editBadge}
             activeOpacity={0.8}
             onPress={() => setIsEditModalVisible(true)}
           >
@@ -209,10 +217,18 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.userInfo}>
-          <Text style={styles.username} numberOfLines={1}>{profile?.name}</Text>
+          <Text style={styles.username} numberOfLines={1}>
+            {profile?.name}
+          </Text>
           <View style={styles.infoRow}>
-            <Ionicons name="mail-outline" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.infoText} numberOfLines={1}>{profile?.email}</Text>
+            <Ionicons
+              name="mail-outline"
+              size={14}
+              color={COLORS.textSecondary}
+            />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {profile?.email}
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.editProfileButton}
@@ -227,17 +243,23 @@ const Profile = () => {
       {/* Stats Section */}
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile?.postedBooks?.length || 0}</Text>
+          <Text style={styles.statValue}>
+            {profile?.postedBooks?.length || 0}
+          </Text>
           <Text style={styles.statLabel}>Books</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile?.followings?.length || 0}</Text>
+          <Text style={styles.statValue}>
+            {profile?.followings?.length || 0}
+          </Text>
           <Text style={styles.statLabel}>Following</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{profile?.followers?.length || 0}</Text>
+          <Text style={styles.statValue}>
+            {profile?.followers?.length || 0}
+          </Text>
           <Text style={styles.statLabel}>Followers</Text>
         </View>
       </View>
@@ -270,8 +292,13 @@ const Profile = () => {
                   </Text>
                 </View>
                 <View style={styles.bookFooter}>
-                  <Text style={styles.bookDate}>{formatDate(item.createdAt)}</Text>
-                  <TouchableOpacity style={styles.deleteButton} activeOpacity={0.6}>
+                  <Text style={styles.bookDate}>
+                    {formatDate(item.createdAt)}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    activeOpacity={0.6}
+                  >
                     <Ionicons name="trash-outline" size={18} color="#FF5252" />
                   </TouchableOpacity>
                 </View>
@@ -279,9 +306,17 @@ const Profile = () => {
             </View>
           ))
         ) : (
-          <View style={{ alignItems: 'center', padding: 40 }}>
+          <View style={{ alignItems: "center", padding: 40 }}>
             <Ionicons name="book-outline" size={48} color={COLORS.border} />
-            <Text style={{ marginTop: 10, color: COLORS.textSecondary, fontWeight: '600' }}>No books shared yet</Text>
+            <Text
+              style={{
+                marginTop: 10,
+                color: COLORS.textSecondary,
+                fontWeight: "600",
+              }}
+            >
+              No books shared yet
+            </Text>
           </View>
         )}
       </View>
@@ -310,15 +345,25 @@ const Profile = () => {
 
             <View style={styles.modalAvatarContainer}>
               <Image
-                source={{ uri: editedImage || "https://i.pravatar.cc/150?u=john" }}
+                source={{
+                  uri: editedImage || "https://i.pravatar.cc/150?u=john",
+                }}
                 style={styles.modalAvatar}
               />
               <View style={styles.imagePickerOptions}>
-                <TouchableOpacity style={styles.imageOptionButton} onPress={takePhoto} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.imageOptionButton}
+                  onPress={takePhoto}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="camera" size={20} color={COLORS.primary} />
                   <Text style={styles.imageOptionText}>Take Photo</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.imageOptionButton} onPress={pickFromGallery} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.imageOptionButton}
+                  onPress={pickFromGallery}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="image" size={20} color={COLORS.primary} />
                   <Text style={styles.imageOptionText}>Gallery</Text>
                 </TouchableOpacity>
@@ -348,14 +393,19 @@ const Profile = () => {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setIsEditModalVisible(false)}
+                onPress={() => {
+                  setIsEditModalVisible(false);
+                  setEditedName(profile?.name as string);
+                  setEditedEmail(profile?.email as string);
+                  setEditedImage(profile?.avatar as string);
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveButton}
-                onPress={handleSaveProfile}
+                onPress={handleSaveUpdatedProfile}
                 activeOpacity={0.8}
               >
                 <Text style={styles.saveButtonText}>Save Changes</Text>
