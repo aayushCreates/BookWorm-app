@@ -30,6 +30,12 @@ const userSchema: Schema = new Schema(
         ref: "Book",
       },
     ],
+    savedBooks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Book"
+      }
+    ],
     followers: [
       {
         type: Schema.Types.ObjectId,

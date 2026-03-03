@@ -64,3 +64,42 @@ export const unfollowUser = async (req: Request, res: Response, next: NextFuncti
         });
     }
 }
+
+export const savedBooks = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req.user as any)._id;
+        const books = await UserServices.getSavedBooks(userId.toString());
+
+        return res.status(200).json({
+            success: true,
+            data: books
+        });
+    } catch (err: any) {
+        console.error("Fetch saved books error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Fetching saved books failed"
+        });
+    }
+}
+
+export const removeSavedBook = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req.user as any)._id;
+        const { id: bookId } = req.params as { id: string };
+
+        const result = await UserServices.removeSaveBook(userId.toString(), bookId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Operation successful",
+            data: result
+        });
+    } catch (err: any) {
+        console.error("Remove saved book error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Operation failed"
+        });
+    }
+}

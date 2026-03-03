@@ -1,4 +1,5 @@
 import User from "../models/user.model";
+import Book from "../models/book.model";
 
 export class UserServices {
     static async getUserProfile(id: string) {
@@ -64,6 +65,37 @@ export class UserServices {
         await targetUser.save();
 
         return { currentUser, targetUser };
+    }
+
+    static async getSavedBooks(userId: string) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const books = await Book.find({ _id: { $in: user.savedBooks } })
+            .select("_id title image caption rating userId");
+        return books;
+    }
+
+    static async removeSaveBook(userId: string, bookId: string) {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const isBookSaved = user.savedBooks.some((id: any) => id.toString() === bookId);
+
+        if (isBookSaved) {
+            user.savedBooks = user.savedBooks.filter((id: any) => id.toString() !== bookId);
+        } else {
+            user.savedBooks.push(bookId as any);
+        }
+
+        await user.save();
+        return {
+            success: true
+        };
     }
 }
 

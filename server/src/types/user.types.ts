@@ -4,6 +4,7 @@ export interface UserType {
   password: string;
   avatar?: string;
   postedBooks: string[];
+  savedBooks: string[];
   followers: string[];
   followings: string[];
   createdAt: Date;
