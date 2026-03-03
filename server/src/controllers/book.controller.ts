@@ -101,7 +101,7 @@ export const removeBook = async (req: Request, res: Response) => {
         const { id } = req.params as {
             id: string
         };
-        const userId = req.user?._id;
+        const userId = (req.user as any)._id.toString();
 
         await BookServices.deleteBook(id, userId);
 
