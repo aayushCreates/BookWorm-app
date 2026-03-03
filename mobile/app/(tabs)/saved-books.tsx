@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -13,6 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import SafeScreen from "@/components/SafeScreen";
 import COLORS from "@/constants/colors";
 import styles from "@/assets/styles/savedBooks.styles";
+import axios from "axios";
+import { useAuthStore } from "@/store/auth.store";
 
 const SAVED_BOOKS_DUMMY = [
   {
@@ -48,11 +50,52 @@ const SavedBooks = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [savedBooks, setSavedBooks] = useState(SAVED_BOOKS_DUMMY);
+  const { token } = useAuthStore();
 
   const filteredBooks = savedBooks.filter((book) =>
     book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     book.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getSavedBooks = async ()=> {
+    try {
+        const { data } = await axios.get(`http://10.0.2.2:5050/api/v1/books/saved`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+    
+          if(!data.success) {
+            throw new Error(data.message || "Something went wrong");
+          }
+    
+          setSavedBooks(data.data);
+    }catch(err: any) {
+        Alert.alert("Error", err.message);
+    }
+  }
+
+  const handleRemoveSavedBook = async (bookId: string)=> {
+    try {
+        const { data } = await axios.delete(`http://10.0.2.2:5050/api/v1/books/saved/${bookId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+    
+          if(!data.success) {
+            throw new Error(data.message || "Something went wrong");
+          }
+    
+        setSavedBooks((prev) => prev.filter((book) => book.id !== bookId));
+    }catch(err: any) {
+        Alert.alert("Error", err.message);
+    }
+  }
+
+  useEffect(()=> {
+    getSavedBooks();
+  }, []);
 
   const handleRemove = (id: string, title: string) => {
     Alert.alert(
@@ -64,7 +107,7 @@ const SavedBooks = () => {
           text: "Remove",
           style: "destructive",
           onPress: () => {
-            setSavedBooks((prev) => prev.filter((book) => book.id !== id));
+            handleRemoveSavedBook(id);
           },
         },
       ]
