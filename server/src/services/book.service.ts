@@ -3,17 +3,17 @@ import uploadToCloudinary from "../utils/cloudinary.utils";
 
 export default class BookServices {
   static async getAllBook() {
-    return await Book.find().populate("userId", "id name avatar").exec();
+    return await Book.find().populate("userId", "_id name avatar").exec();
   }
 
   static async getBook(id: string) {
     return await Book.findById(id)
-      .populate("userId", "id name avatar")
+      .populate("userId", "_id name avatar")
       .populate({
         path: "comments",
         populate: {
           path: "userId",
-          select: "id name avatar",
+          select: "_id name avatar",
         },
       })
       .exec();

@@ -1,9 +1,13 @@
 import styles from "@/assets/styles/home.styles";
 import COLORS from "@/constants/colors";
+import { useAuthStore } from "@/store/auth.store";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -22,70 +26,65 @@ const CATEGORIES = [
   "History",
 ];
 
-const DUMMY_POSTS = [
-  {
-    id: "1",
-    user: {
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/150?u=john",
-    },
-    book: {
-      title: "The Hunger Games",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1586722975i/2767052.jpg",
-      rating: 4,
-      review: "A dystopian tale of survival, rebellion, and sacrifice.",
-      date: "3/9/2025",
-      category: "Dystopian",
-    },
-  },
-  {
-    id: "2",
-    user: {
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/150?u=jane",
-    },
-    book: {
-      title: "The Great Gatsby",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1490528560i/4671.jpg",
-      rating: 5,
-      review:
-        "A classic story of wealth, love, and the American dream in the 1920s.",
-      date: "3/9/2025",
-      category: "Classic",
-    },
-  },
-  {
-    id: "3",
-    user: {
-      name: "Alex Smith",
-      avatar: "https://i.pravatar.cc/150?u=alex",
-    },
-    book: {
-      title: "Sapiens",
-      image:
-        "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1595703765i/23692271.jpg",
-      rating: 5,
-      review:
-        "A thought-provoking exploration of human history and our species' evolution.",
-      date: "3/9/2025",
-      category: "History",
-    },
-  },
-];
+interface Book {
+  _id: string;
+  title: string;
+  image: string;
+  userId: {
+    _id: string;
+    name: string;
+    avatar: string;
+  }
+  auther?: string;
+  caption: string;
+  rating: number;
+  category?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const router = useRouter();
+  const [loading, setLoading] = useState<boolean>(false);
+  const { token } = useAuthStore();
+  const [books, setBooks] = useState<Book[]>([]);
 
-  const filteredPosts = DUMMY_POSTS.filter((post) => {
-    const matchesSearch = post.book.title
+  const getBooks = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(
+        `http://10.0.2.2:5050/api/v1/book`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!data.success) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setBooks(data.data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    getBooks();
+  }, []);
+
+  const filteredPosts = books.filter((post) => {
+    const matchesSearch = post.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesCategory =
-      selectedCategory === "All" || post.book.category === selectedCategory;
+      selectedCategory === "All" || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -103,6 +102,15 @@ const Index = () => {
         ))}
       </View>
     );
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   return (
@@ -165,83 +173,91 @@ const Index = () => {
       </View>
 
       {/* books post */}
-      <ScrollView
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => (
-            <Pressable 
-            key={post.id}
-            onPress={()=> router.push({
-              pathname: '/book-details/[id]',
-              params: {
-                id: post.id
-              }
-            })}
-            >
-              <View key={post.id} style={styles.bookCard}>
-                <View style={styles.userInfo}>
-                  <Image
-                    source={{ uri: post.user.avatar }}
-                    style={styles.avatar}
-                  />
-                  <Text style={styles.username}>{post.user.name}</Text>
-                </View>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post) => (
+              <Pressable 
+                key={post._id}
+                onPress={()=> router.push({
+                  pathname: '/book-details/[id]',
+                  params: {
+                    id: post._id
+                  }
+                })}
+              >
+                <View style={styles.bookCard}>
+                  <View style={styles.userInfo}>
+                    <Image
+                      source={{ uri: post.userId.avatar || `https://ui-avatars.com/api/?name=${post.userId.name}&background=random` }}
+                      style={styles.avatar}
+                    />
+                    <Text style={styles.username}>{post.userId.name}</Text>
+                  </View>
 
-                <View style={styles.bookImageContainer}>
-                  <Image
-                    source={{ uri: post.book.image }}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                </View>
+                  <View style={styles.bookImageContainer}>
+                    <Image
+                      source={{ uri: post.image }}
+                      style={styles.bookImage}
+                      resizeMode="cover"
+                    />
+                  </View>
 
-                <View style={styles.bookDetails}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={styles.bookTitle}>{post.book.title}</Text>
+                  <View style={styles.bookDetails}>
                     <View
                       style={{
-                        backgroundColor: COLORS.background,
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 10,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          fontWeight: "700",
-                          color: COLORS.primary,
-                        }}
-                      >
-                        {post.book.category.toUpperCase()}
-                      </Text>
+                      <Text style={styles.bookTitle}>{post.title}</Text>
+                      {post.category && (
+                        <View
+                          style={{
+                            backgroundColor: COLORS.background,
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 10,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontWeight: "700",
+                              color: COLORS.primary,
+                            }}
+                          >
+                            {post.category.toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
                     </View>
+                    {renderStars(post.rating)}
+                    <Text style={styles.caption} numberOfLines={3}>{post.caption}</Text>
+                    <Text style={styles.date}>{formatDate(post.createdAt)}</Text>
                   </View>
-                  {renderStars(post.book.rating)}
-                  <Text style={styles.caption}>{post.book.review}</Text>
-                  <Text style={styles.date}>{post.book.date}</Text>
                 </View>
-              </View>
-            </Pressable>
-          ))
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={64} color={COLORS.border} />
-            <Text style={styles.emptyText}>No books found</Text>
-            <Text style={styles.emptySubtext}>
-              Try searching for a different title or category
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+              </Pressable>
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={64} color={COLORS.border} />
+              <Text style={styles.emptyText}>No books found</Text>
+              <Text style={styles.emptySubtext}>
+                Try searching for a different title or category
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
