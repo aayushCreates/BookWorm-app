@@ -35,7 +35,7 @@ export default class AuthServices {
   }
 
   static async loginService(email: string, password: string) {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       throw new Error("Invalid credentials");
