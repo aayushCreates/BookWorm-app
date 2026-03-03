@@ -1,5 +1,6 @@
 import User from "../models/user.model";
 import Book from "../models/book.model";
+import uploadToCloudinary from "../utils/cloudinary.utils";
 
 export class UserServices {
     static async getUserProfile(id: string) {
@@ -11,6 +12,43 @@ export class UserServices {
         }
 
         return isUserExists;
+    }
+
+    static async getMyProfile(id: string) {
+        const user = await User.findById(id)
+            .populate("postedBooks");
+            
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        console.log("my profile: ", user);
+
+        return user;
+    }
+
+    static async updateUserProfile(id: string, data: { name?: string, email?: string, fileData?: any }) {
+        const user = await User.findById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (data.name) user.name = data.name;
+        if (data.email) {
+            const existingUser = await User.findOne({ email: data.email });
+            if (existingUser && existingUser._id.toString() !== id) {
+                throw new Error("Email already in use");
+            }
+            user.email = data.email;
+        }
+
+        if (data.fileData) {
+            const result = await uploadToCloudinary(data.fileData.buffer);
+            user.avatar = result.secure_url;
+        }
+
+        await user.save();
+        return user;
     }
 
     static async followUser(currentUserId: string, targetUserId: string) {

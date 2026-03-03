@@ -23,6 +23,27 @@ export const userProfile = async (req: Request, res: Response, next: NextFunctio
     }
 }
 
+export const myProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req.user as any)._id;
+        console.log("userid: ", userId);
+
+        const profile = await UserServices.getMyProfile(userId.toString());
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully",
+            data: profile,
+        });
+    } catch (err: any) {
+        console.error("Fetching My Profile error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Fetching Profile failed",
+        });
+    }
+}
+
 export const followUser = async (req: Request, res: Response, next: NextFunction)=> {
     try {
         const { id: targetUserId } = req.params as { id: string };
@@ -65,23 +86,50 @@ export const unfollowUser = async (req: Request, res: Response, next: NextFuncti
     }
 }
 
-export const savedBooks = async (req: Request, res: Response, next: NextFunction) => {
+export const myProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const userId = (req.user as any)._id;
-        const books = await UserServices.getSavedBooks(userId.toString());
+        const profile = await UserServices.getMyProfile(userId.toString());
 
         return res.status(200).json({
             success: true,
-            data: books
+            data: profile,
         });
     } catch (err: any) {
-        console.error("Fetch saved books error:", err);
+        console.error("Fetching My Profile error:", err);
         return res.status(500).json({
             success: false,
-            message: err.message || "Fetching saved books failed"
+            message: err.message || "Fetching Profile failed",
         });
     }
 }
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = (req.user as any)._id;
+        const { name, email } = req.body;
+        const fileData = req.file;
+
+        const profile = await UserServices.updateUserProfile(userId.toString(), {
+            name,
+            email,
+            fileData
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: profile,
+        });
+    } catch (err: any) {
+        console.error("Updating Profile error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Updating Profile failed",
+        });
+    }
+}
+
 
 export const removeSavedBook = async (req: Request, res: Response, next: NextFunction) => {
     try {

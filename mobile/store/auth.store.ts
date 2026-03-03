@@ -18,8 +18,6 @@ export const useAuthStore = create((set, get) => ({
         password,
       });
 
-      console.log("data response: ", data);
-
       if (!data.success) {
         throw new Error(data.message || "Something went wrong");
       }
