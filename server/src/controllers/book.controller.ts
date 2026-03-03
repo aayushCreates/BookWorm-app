@@ -6,6 +6,7 @@ export const allBooks = async (req: Request, res: Response) => {
         const books = await BookServices.getAllBook();
         res.status(200).json({
             success: true,
+            message: "Books are fetched successfully",
             data: books
         });
     } catch (error: any) {
@@ -16,7 +17,7 @@ export const allBooks = async (req: Request, res: Response) => {
     }
 };
 
-export const book = async (req: Request, res: Response) => {
+export const bookDetail = async (req: Request, res: Response) => {
     try {
         const { id } = req.params as {
             id: string
@@ -30,6 +31,7 @@ export const book = async (req: Request, res: Response) => {
         }
         res.status(200).json({
             success: true,
+            message: "Book detailed fetched successfully",
             data: book
         });
     } catch (error: any) {

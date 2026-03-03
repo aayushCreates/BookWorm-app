@@ -6,7 +6,6 @@ export interface IBook extends Document {
   caption?: string;
   rating: number;
   userId: Types.ObjectId;
-  likedBy: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,12 +34,12 @@ const bookSchema: Schema = new Schema(
       ref: "User",
       required: true,
     },
-    likedBy: [
+    comments: [
       {
         type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+        ref: "Comment"
+      }
+    ]
   },
   { timestamps: true }
 );

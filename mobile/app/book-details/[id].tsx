@@ -20,33 +20,30 @@ import {
 
 interface Comment {
   _id: string;
-  user: {
+  content: string;
+  userId: {
     _id: string;
     name: string;
     avatar?: string;
   };
-  rating: number;
-  comment: string;
   createdAt: string;
 }
 
 interface BookDetail {
   _id: string;
-  user: {
+  title: string;
+  image: string;
+  caption?: string;
+  rating: number;
+  category?: string;
+  userId: {
     _id: string;
     name: string;
     avatar?: string;
   };
-  book: {
-    title: string;
-    image: string;
-    rating: number;
-    review: string;
-    category: string;
-    author?: string;
-  };
   comments: Comment[];
   createdAt: string;
+  updatedAt: string;
 }
 
 const Details = () => {
@@ -54,7 +51,7 @@ const Details = () => {
   const router = useRouter();
   const [commentText, setCommentText] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const [bookDetail, setBookDetail] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -155,7 +152,7 @@ const Details = () => {
       {/* Immersive Image Header */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: bookDetail.book.image }}
+          source={{ uri: bookDetail.image }}
           style={styles.bookImage}
           resizeMode="cover"
         />
@@ -173,13 +170,13 @@ const Details = () => {
       >
         <View style={styles.headerInfo}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{bookDetail.book.category}</Text>
+            <Text style={styles.categoryText}>{bookDetail.category || "General"}</Text>
           </View>
-          <Text style={styles.title}>{bookDetail.book.title}</Text>
+          <Text style={styles.title}>{bookDetail.title}</Text>
           <View style={styles.ratingRow}>
-            {renderStars(bookDetail.book.rating)}
+            {renderStars(bookDetail.rating)}
             <Text style={styles.ratingText}>
-              {bookDetail.book.rating.toFixed(1)} Rating
+              {bookDetail.rating.toFixed(1)} Rating
             </Text>
           </View>
           <View style={styles.dateContainer}>
@@ -200,35 +197,37 @@ const Details = () => {
           <Pressable 
             onPress={() => router.push({
               pathname: '/profile/[id]',
-              params: { id: bookDetail.user._id }
+              params: { id: bookDetail.userId._id }
             })}
           >
             <View style={styles.userInfo}>
               <Image
-                source={{ uri: bookDetail.user.avatar || `https://ui-avatars.com/api/?name=${bookDetail.user.name}&background=random` }}
+                source={{ uri: bookDetail.userId.avatar || `https://ui-avatars.com/api/?name=${bookDetail.userId.name}&background=random` }}
                 style={styles.userAvatar}
               />
               <View>
-                <Text style={styles.userName}>{bookDetail.user.name}</Text>
+                <Text style={styles.userName}>{bookDetail.userId.name}</Text>
                 <Text style={styles.userRole}>Avid Reader</Text>
               </View>
-              <TouchableOpacity
-                style={[
-                  styles.followButton,
-                  isFollowing && styles.followingButton,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => setIsFollowing(!isFollowing)}
-              >
-                <Text
+              {user && user._id !== bookDetail.userId._id && (
+                <TouchableOpacity
                   style={[
-                    styles.followButtonText,
-                    isFollowing && styles.followingButtonText,
+                    styles.followButton,
+                    isFollowing && styles.followingButton,
                   ]}
+                  activeOpacity={0.8}
+                  onPress={() => setIsFollowing(!isFollowing)}
                 >
-                  {isFollowing ? "Following" : "Follow"}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.followButtonText,
+                      isFollowing && styles.followingButtonText,
+                    ]}
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </Pressable>
         </View>
@@ -236,7 +235,7 @@ const Details = () => {
         {/* Review Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Review & Thoughts</Text>
-          <Text style={styles.reviewText}>{bookDetail.book.review}</Text>
+          <Text style={styles.reviewText}>{bookDetail.caption}</Text>
         </View>
 
         <View style={styles.divider} />
@@ -265,16 +264,16 @@ const Details = () => {
               bookDetail.comments.map((comment) => (
                 <View key={comment._id} style={styles.commentItem}>
                   <Image
-                    source={{ uri: comment.user.avatar || `https://ui-avatars.com/api/?name=${comment.user.name}&background=random` }}
+                    source={{ uri: comment.userId.avatar || `https://ui-avatars.com/api/?name=${comment.userId.name}&background=random` }}
                     style={styles.commentAvatar}
                   />
                   <View style={styles.commentContent}>
                     <View style={styles.commentUserRow}>
-                      <Text style={styles.commentUserName}>{comment.user.name}</Text>
+                      <Text style={styles.commentUserName}>{comment.userId.name}</Text>
                       <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
                     </View>
-                    {renderStars(comment.rating, 14)}
-                    <Text style={styles.commentText}>{comment.comment}</Text>
+                    {/* {renderStars(comment.rating || 0, 14)} */}
+                    <Text style={styles.commentText}>{comment.content}</Text>
                   </View>
                 </View>
               ))
